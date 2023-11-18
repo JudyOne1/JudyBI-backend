@@ -1,0 +1,21 @@
+package com.JudyBI.manager;
+
+import javax.annotation.Resource;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+/**
+ * Cos 操作测试
+ * @author  Judy  "https://github.com/JudyOne1"
+ */
+@SpringBootTest
+class CosManagerTest {
+
+    @Resource
+    private CosManager cosManager;
+
+    @Test
+    void putObject() {
+        cosManager.putObject("test", "test.json");
+    }
+}

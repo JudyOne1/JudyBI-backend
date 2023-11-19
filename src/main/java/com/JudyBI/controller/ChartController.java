@@ -40,7 +40,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * 帖子接口
- * @author  Judy  "https://github.com/JudyOne1"
+ *
+ * @author Judy  "https://github.com/JudyOne1"
  */
 @RestController
 @RequestMapping("/chart")
@@ -164,7 +165,7 @@ public class ChartController {
      */
     @PostMapping("/list/page")
     public BaseResponse<Page<Chart>> listChartByPage(@RequestBody ChartQueryRequest chartQueryRequest,
-            HttpServletRequest request) {
+                                                     HttpServletRequest request) {
         long current = chartQueryRequest.getCurrent();
         long size = chartQueryRequest.getPageSize();
         // 限制爬虫
@@ -183,7 +184,7 @@ public class ChartController {
      */
     @PostMapping("/my/list/page")
     public BaseResponse<Page<Chart>> listMyChartByPage(@RequestBody ChartQueryRequest chartQueryRequest,
-            HttpServletRequest request) {
+                                                       HttpServletRequest request) {
         if (chartQueryRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -230,8 +231,8 @@ public class ChartController {
     /**
      * 智能分析（同步）
      *
-     * @param multipartFile
-     * @param genChartByAiRequest
+     * @param multipartFile       接收文件使用RequestPart，excel文件
+     * @param genChartByAiRequest 用户输入传参
      * @param request
      * @return
      */
@@ -246,12 +247,13 @@ public class ChartController {
         ThrowUtils.throwIf(StringUtils.isNotBlank(name) && name.length() > 100, ErrorCode.PARAMS_ERROR, "名称过长");
         // 校验文件
         long size = multipartFile.getSize();
-        String originalFilename = multipartFile.getOriginalFilename();
         // 校验文件大小
         final long ONE_MB = 1024 * 1024L;
         ThrowUtils.throwIf(size > ONE_MB, ErrorCode.PARAMS_ERROR, "文件超过 1M");
-        // 校验文件后缀 aaa.png
+        // 校验文件后缀 xxx.xlsx
+        String originalFilename = multipartFile.getOriginalFilename();
         String suffix = FileUtil.getSuffix(originalFilename);
+        // 使用validFileSuffixList，支持多种文件格式（如 .xlsx 和 .csv）便于扩展
         final List<String> validFileSuffixList = Arrays.asList("xlsx");
         ThrowUtils.throwIf(!validFileSuffixList.contains(suffix), ErrorCode.PARAMS_ERROR, "文件后缀非法");
 
@@ -292,7 +294,8 @@ public class ChartController {
         // 压缩后的数据
         String csvData = ExcelUtils.excelToCsv(multipartFile);
         userInput.append(csvData).append("\n");
-
+        // 先调用AI，再保存数据【同步】
+        // 执行调用ai服务
         String result = aiManager.doChat(biModelId, userInput.toString());
         String[] splits = result.split("【【【【【");
         if (splits.length < 3) {
@@ -328,7 +331,7 @@ public class ChartController {
      */
     @PostMapping("/gen/async")
     public BaseResponse<BiResponse> genChartByAiAsync(@RequestPart("file") MultipartFile multipartFile,
-                                             GenChartByAiRequest genChartByAiRequest, HttpServletRequest request) {
+                                                      GenChartByAiRequest genChartByAiRequest, HttpServletRequest request) {
         String name = genChartByAiRequest.getName();
         String goal = genChartByAiRequest.getGoal();
         String chartType = genChartByAiRequest.getChartType();
@@ -384,6 +387,7 @@ public class ChartController {
         String csvData = ExcelUtils.excelToCsv(multipartFile);
         userInput.append(csvData).append("\n");
 
+        // 先保存数据，再调用ai【异步】
         // 插入到数据库
         Chart chart = new Chart();
         chart.setName(name);
@@ -442,7 +446,7 @@ public class ChartController {
      */
     @PostMapping("/gen/async/mq")
     public BaseResponse<BiResponse> genChartByAiAsyncMq(@RequestPart("file") MultipartFile multipartFile,
-                                                      GenChartByAiRequest genChartByAiRequest, HttpServletRequest request) {
+                                                        GenChartByAiRequest genChartByAiRequest, HttpServletRequest request) {
         String name = genChartByAiRequest.getName();
         String goal = genChartByAiRequest.getGoal();
         String chartType = genChartByAiRequest.getChartType();

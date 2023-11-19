@@ -27,12 +27,7 @@ public class ExcelUtils {
      * @return
      */
     public static String excelToCsv(MultipartFile multipartFile) {
-//        File file = null;
-//        try {
-//            file = ResourceUtils.getFile("classpath:网站数据.xlsx");
-//        } catch (FileNotFoundException e) {
-//            e.printStackTrace();
-//        }
+
         // 读取数据
         List<Map<Integer, String>> list = null;
         try {
@@ -49,11 +44,11 @@ public class ExcelUtils {
         }
         // 转换为 csv
         StringBuilder stringBuilder = new StringBuilder();
-        // 读取表头
+        // 读取表头(第一行数据)
         LinkedHashMap<Integer, String> headerMap = (LinkedHashMap) list.get(0);
         List<String> headerList = headerMap.values().stream().filter(ObjectUtils::isNotEmpty).collect(Collectors.toList());
         stringBuilder.append(StringUtils.join(headerList, ",")).append("\n");
-        // 读取数据
+        // 读取数据（除去第一行表头数据）
         for (int i = 1; i < list.size(); i++) {
             LinkedHashMap<Integer, String> dataMap = (LinkedHashMap) list.get(i);
             List<String> dataList = dataMap.values().stream().filter(ObjectUtils::isNotEmpty).collect(Collectors.toList());
